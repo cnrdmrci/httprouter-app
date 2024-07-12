@@ -3,6 +3,7 @@ package main
 import (
 	"io"
 	"net/http"
+	"net/url"
 
 	"github.com/julienschmidt/httprouter"
 )
@@ -24,10 +25,11 @@ func proxyHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) 
 		return
 	}
 
-	path := ps.ByName("path")
-	fullUrl := apiUrl + path
+	fullUrl, _ := url.Parse(apiUrl)
+	fullUrl.Path = ps.ByName("path")
+	fullUrl.RawQuery = r.URL.RawQuery
 
-	req, err := http.NewRequest(r.Method, fullUrl, r.Body)
+	req, err := http.NewRequest(r.Method, fullUrl.String(), r.Body)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
